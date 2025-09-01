@@ -6,21 +6,8 @@ import { ATSResults } from '@/components/ATSResults';
 import { AnalysisButton } from '@/components/AnalysisButton';
 import { Separator } from '@/components/ui/separator';
 import { Brain, Zap, Target, TrendingUp, FileSearch } from 'lucide-react';
+import { analyzeResumeWithGemini, AnalysisResults } from '@/services/geminiService';
 import { useToast } from '@/hooks/use-toast';
-
-interface AnalysisResults {
-  ats_score: number;
-  matched_skills: string[];
-  missing_skills: string[];
-  recommendations: string[];
-  categories?: {
-    technical_skills: number;
-    experience: number;
-    education: number;
-    keywords: number;
-    formatting: number;
-  };
-}
 
 const Index = () => {
   const [jobDescription, setJobDescription] = useState('');
@@ -35,39 +22,6 @@ const Index = () => {
     setResumeText(text);
   };
 
-  const mockAnalyzeWithGemini = async (jobDesc: string, resumeText: string): Promise<AnalysisResults> => {
-    // Mock API call - In production, this would call your backend/edge function
-    await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API delay
-    
-    // Mock response data
-    return {
-      ats_score: 78,
-      matched_skills: [
-        'React', 'Node.js', 'TypeScript', 'JavaScript', 'Git', 
-        'Problem-solving', 'Team collaboration', 'AWS'
-      ],
-      missing_skills: [
-        'Docker', 'Kubernetes', 'NoSQL databases', 
-        'Microservices architecture', 'GraphQL'
-      ],
-      recommendations: [
-        'Add experience with containerization technologies like Docker and Kubernetes to match modern deployment practices.',
-        'Include specific examples of NoSQL database usage (MongoDB, DynamoDB) to strengthen your backend profile.',
-        'Highlight any microservices architecture experience or distributed systems knowledge.',
-        'Consider adding GraphQL to your skill set as it\'s mentioned in the job requirements.',
-        'Quantify your achievements with metrics (e.g., "Improved performance by 40%" instead of "Improved performance").',
-        'Include more industry-specific keywords from the job description in your experience section.'
-      ],
-      categories: {
-        technical_skills: 85,
-        experience: 75,
-        education: 90,
-        keywords: 65,
-        formatting: 80
-      }
-    };
-  };
-
   const handleAnalyze = async () => {
     if (!jobDescription.trim() || !resumeText.trim()) {
       toast({
@@ -80,7 +34,7 @@ const Index = () => {
 
     setIsAnalyzing(true);
     try {
-      const results = await mockAnalyzeWithGemini(jobDescription, resumeText);
+      const results = await analyzeResumeWithGemini(jobDescription, resumeText);
       setAnalysisResults(results);
       
       toast({
@@ -88,9 +42,10 @@ const Index = () => {
         description: `Your resume scored ${results.ats_score}/100 for ATS compatibility.`,
       });
     } catch (error) {
+      console.error('Analysis error:', error);
       toast({
         title: "Analysis Failed",
-        description: "There was an error analyzing your resume. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error analyzing your resume. Please try again.",
         variant: "destructive",
       });
     } finally {

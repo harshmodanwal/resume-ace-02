@@ -3,6 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { extractTextFromPDF, extractTextFromDOCX } from '@/services/geminiService';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResumeUploadProps {
@@ -19,18 +20,9 @@ export const ResumeUpload = ({ onFileUpload, isProcessing }: ResumeUploadProps) 
     const fileType = file.type;
     
     if (fileType === 'application/pdf') {
-      // For PDF files - using pdf-parse (client-side)
-      const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      
-      // Simple text extraction for demo - in production, you'd use pdf-parse on the server
-      return `[PDF Content from ${file.name}] - Text extraction would happen on the server using pdf-parse`;
+      return await extractTextFromPDF(file);
     } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      // For DOCX files - using mammoth (client-side)
-      const arrayBuffer = await file.arrayBuffer();
-      
-      // Simple text extraction for demo - in production, you'd use mammoth on the server
-      return `[DOCX Content from ${file.name}] - Text extraction would happen on the server using mammoth`;
+      return await extractTextFromDOCX(file);
     } else {
       throw new Error('Unsupported file type. Please upload a PDF or DOCX file.');
     }
